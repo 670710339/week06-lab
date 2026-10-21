@@ -17,6 +17,11 @@ type Movie struct {
     Poster  *string `json:"poster"`
 }
 
+type MovieDetail struct {
+    Movie
+    Detail *string `json:"detail"`
+}
+
 // SearchMovies ค่าจากผู้ใช้เดินทางผ่าน $1 แยกจากคำสั่งเสมอ
 func (s *Store) SearchMovies(ctx context.Context, q string) ([]Movie, error) {
     rows, err := s.Pool.Query(ctx,
@@ -26,7 +31,8 @@ func (s *Store) SearchMovies(ctx context.Context, q string) ([]Movie, error) {
                   WHERE mg.movie_id = m.id AND mg.position = 0),
                 extract(year FROM m.release_date)::int,
                 round(m.vote_average, 1)::float8,
-                'https://image.tmdb.org/t/p/w500' || m.poster_path
+                CASE WHEN m.poster_path LIKE 'http%' THEN m.poster_path
+                     ELSE 'https://image.tmdb.org/t/p/w500' || m.poster_path END
          FROM movies m
          WHERE lower(m.title) LIKE '%' || lower($1) || '%'
          ORDER BY m.popularity DESC`, q)
@@ -45,12 +51,6 @@ func (s *Store) SearchMovies(ctx context.Context, q string) ([]Movie, error) {
     return out, rows.Err()
 }
 
-type MovieDetail struct {
-    Movie
-    Detail *string `json:"detail"`
-}
-
-// GetMovie หาหนังจากเลข ไม่พบตอบ ErrNotFound
 func (s *Store) GetMovie(ctx context.Context, id int64) (MovieDetail, error) {
     var m MovieDetail
     err := s.Pool.QueryRow(ctx,
@@ -60,7 +60,8 @@ func (s *Store) GetMovie(ctx context.Context, id int64) (MovieDetail, error) {
                   WHERE mg.movie_id = m.id AND mg.position = 0),
                 extract(year FROM m.release_date)::int,
                 round(m.vote_average, 1)::float8,
-                'https://image.tmdb.org/t/p/w500' || m.poster_path,
+                CASE WHEN m.poster_path LIKE 'http%' THEN m.poster_path
+                     ELSE 'https://image.tmdb.org/t/p/w500' || m.poster_path END,
                 coalesce(m.overview_th, m.overview)
          FROM movies m
          WHERE m.id = $1`, id).

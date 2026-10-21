@@ -1,2 +1,4 @@
+.env
 .jwt_secret
-.jwt_secret
+*.exe
+bin/

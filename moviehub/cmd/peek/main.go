@@ -1,1 +1,1 @@
-package peek
+package main

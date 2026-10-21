@@ -1,1 +1,1 @@
-# week06-lab
+# week6_lab

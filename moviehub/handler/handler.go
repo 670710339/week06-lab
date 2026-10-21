@@ -6,14 +6,16 @@ import (
     "net/http"
     "strconv"
     "errors"
+
     "moviehub/store"
 	"moviehub/auth"
 )
 
 type Handler struct {
-    Store   *store.Store
-    Tickets *auth.Issuer
+    Store *store.Store
+	Tickets *auth.Issuer
 }
+
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
     w.Header().Set("Content-Type", "application/json")
